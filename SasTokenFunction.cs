@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Azure;
 using Azure.Storage;
@@ -16,7 +15,7 @@ namespace BioMedicalCloud.Function
     public static class SasTokenFunction
     {
         [FunctionName("SasTokenFunction")]
-        public static async Task<ActionResult<string>> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req)
+        public static async Task<SasTokenResponse> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req)
         {
             // Retrieve connection string from settings
             var connectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
@@ -33,13 +32,17 @@ namespace BioMedicalCloud.Function
             //Create a unique name for the container Access policy
             var policyName = "mlsaspolicy2137";
             // Create the container Access policy
-            await CreateStoredAccessPolicyAsync(containerClient, policyName);
+            var policyResponse = await CreateStoredAccessPolicyAsync(containerClient, policyName);
             // Generate SAS using the provided policy
             var sasTokenUri = GetServiceSasUriForContainer(containerClient, policyName);
-            var sasToken = sasTokenUri.Query;
+            var sasTokenResponse = new SasTokenResponse
+            {
+                ResponseMessage = $"policy last modified: {policyResponse.Value.LastModified.UtcDateTime.ToString()}",
+                SasToken = sasTokenUri.Query,
+            };
 
             // return the SAS Token to the client app
-            return new OkObjectResult(sasToken);
+            return sasTokenResponse;
         }
 
         private async static Task<Response<BlobContainerInfo>> CreateStoredAccessPolicyAsync(BlobContainerClient containerClient, string policyName)
