@@ -16,7 +16,7 @@ namespace BioMedicalCloud.Function
     public static class SasTokenFunction
     {
         [FunctionName("SasTokenFunction")]
-        public static async Task<ActionResult<string>> Run([HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequest req)
+        public static async Task<ActionResult<string>> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req)
         {
             // Retrieve connection string from settings
             var connectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
